@@ -18,7 +18,11 @@
                  [cheshire "5.7.0"]
                  [morse "0.2.4"]]
 
-  :plugins [[lein-ring "0.9.7"]]
+  :plugins [[lein-ring "0.9.7"]
+            [io.sarnowski/lein-docker "1.0.0"]]
+
+  :docker {:image-name "otann/octolook"
+           :dockerfile "Dockerfile"}
 
   :main ^:skip-aot octolook.core
   :ring {:handler octolook.handler/app}

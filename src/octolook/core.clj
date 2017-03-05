@@ -1,9 +1,11 @@
 (ns octolook.core
   (:gen-class)
-  (:require [ring.adapter.jetty :refer [run-jetty]]
+  (:require [clojure.tools.nrepl.server :refer [start-server stop-server]]
+            [ring.adapter.jetty :refer [run-jetty]]
             [octolook.handler :refer [app]]
             [omniconf.core :as cfg]
-            [clojure.tools.nrepl.server :refer [start-server stop-server]]))
+            [morse.polling :as p]
+            [octolook.telegram :as t]))
 
 (cfg/define {:port           {:description "HTTP port"
                               :type        :number
@@ -22,6 +24,8 @@
 (defn -main [& args]
   (cfg/populate-from-env)
   (cfg/verify :quit-on-error true)
-  (reset! nrepl-server (start-server :port 7888))
+  (reset! nrepl-server (start-server :port (cfg/get :repl)
+                                     :bind "0.0.0.0"))
+  (p/start (cfg/get :telegram-token) t/handler)
   (run-jetty app {:port  (cfg/get :port)
                   :join? false}))
