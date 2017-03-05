@@ -1,18 +1,15 @@
 (ns octolook.handler
-  (:require [compojure.core :refer :all]
+  (:require [compojure.core :refer [defroutes GET]]
             [compojure.route :as route]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
-            [octolook.drawbridge :as drawbridge]))
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]))
 
-(defn test-response [] "Test subject")
+(defn test-response [] "Test subject 2")
 
 (defroutes app-routes
+  (GET "/" [] "Hello world")
   (GET "/test" [] (test-response))
-  ;(ANY "/repl" request (nrepl-handler request))
   (route/not-found "Not Found"))
 
 (def app
   (-> app-routes
-      (wrap-defaults site-defaults)
-      (drawbridge/wrap-drawbridge)))
-
+      (wrap-defaults site-defaults)))
