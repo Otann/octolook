@@ -37,47 +37,41 @@
                                 (or forks 0) " forks and "
                                 (or stars 0) " stars")}})
 
+(defn start [{{id :id :as chat} :chat}]
+  (log/debug "Bot joined new chat: " chat)
+  (t/send-text (cfg/get :telegram-token)
+               id "Welcome to octolook!"))
+
+(defn help [{{id :id :as chat} :chat}]
+  (log/debug "Help was requested in " chat)
+  (t/send-text (cfg/get :telegram-token)
+               id "Help is on the way"))
+
+(defn repo [{{id :id} :chat text :text}]
+  (t/send-text (cfg/get :telegram-token)
+               id {:parse_mode               "Markdown"
+                   :disable_web_page_preview true}
+               (repo-info text)))
+
+
 (defn inline [{:keys [id query offset] :as data}]
   (let [token (cfg/get :telegram-token)
         parts (str/split (or query "") #"/")]
     (if (> (count parts) 1)
+      
+      ; user entered — owner/name
       (let [[user-name repo-prefix] parts
             repos (gh/user-repos user-name repo-prefix)
             total (count repos)]
-        (println "Found " total " repos for " user-name "/" repo-prefix)
+        (log/debug "Found " total " repos for " user-name "/" repo-prefix)
         (when (> total 0)
           (t/answer-inline token id (map repo-inline repos))))
+
+      ; user entered — repo-name
       (let [repo-name (first parts)
             repos     (gh/search-repo repo-name)
             total     (count repos)]
-        (println "Found " total " repos for " repo-name)
+        (log/debug "Found " total " repos for " repo-name)
         (when (> total 0)
           (t/answer-inline token id (map repo-inline repos))))))
   :done)
-
-(h/defhandler handler
-
-  (h/command-fn "start"
-    (fn [{{id :id :as chat} :chat}]
-      (println "Bot joined new chat: " chat)
-      (t/send-text (cfg/get :telegram-token)
-                   id "Welcome to octolook!")))
-
-  (h/command-fn "help"
-    (fn [{{id :id :as chat} :chat}]
-      (println "Help was requested in " chat)
-      (t/send-text (cfg/get :telegram-token)
-                   id "Help is on the way")))
-
-  (h/command-fn "repo"
-    (fn [{{id :id} :chat text :text}]
-      (t/send-text (cfg/get :telegram-token)
-                   id {:parse_mode               "Markdown"
-                       :disable_web_page_preview true}
-                   (repo-info text))))
-
-  (h/inline-fn
-    (fn [{:keys [id query offset] :as data}]
-      (inline data)))
-
-  (h/message-fn (fn [message] (println "Unhandled 2: " message))))

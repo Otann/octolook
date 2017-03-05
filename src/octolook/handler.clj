@@ -1,13 +1,29 @@
 (ns octolook.handler
   (:require [compojure.core :refer [defroutes GET]]
             [compojure.route :as route]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]))
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [morse.handlers :as h :refer [defhandler command-fn]]
+            [octolook.telegram :as t]
+            [taoensso.timbre :as log]))
 
-(defn test-response [] "Test subject")
+(defn repl-response [] "I am a string from server")
+
+(defhandler telegram-handler
+  (command-fn "start" t/start)
+  (command-fn "help" t/help)
+  (command-fn "repo" t/repo)
+  (h/inline-fn t/inline)
+
+  (h/message-fn
+    (fn [message] (log/info "Unhandled message:" message))))
 
 (defroutes app-routes
-  (GET "/" [] "Hello world 2")
-  (GET "/test" [] (test-response))
+  (GET "/" [] "Hello world")
+  (GET "/repl" [] (repl-response))
+
+  (GET "/telegram" {{updates :result} :body}
+    (map telegram-handler updates))
+
   (route/not-found "Not Found"))
 
 (def app
