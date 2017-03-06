@@ -6,9 +6,7 @@
             [octolook.telegram :as t]
             [taoensso.timbre :as log]))
 
-(defn repl-response [] "I am a string from server")
-
-(defhandler telegram-handler
+(defhandler handler
   (command-fn "start" t/start)
   (command-fn "help" t/help)
   (command-fn "repo" t/repo)
@@ -19,11 +17,6 @@
 
 (defroutes app-routes
   (GET "/" [] "Hello world")
-  (GET "/repl" [] (repl-response))
-
-  (GET "/telegram" {{updates :result} :body}
-    (map telegram-handler updates))
-
   (route/not-found "Not Found"))
 
 (def app

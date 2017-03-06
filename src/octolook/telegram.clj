@@ -8,19 +8,20 @@
 
 (defn repo-info [text]
   (let [parts     (str/split text #"\s")
-        repo-name (second parts)]
-    (if-let [repo (gh/repo repo-name)]
-      (let [{repo-url :html_url
-             forks    :forks_count
-             watchers :watchers_count
-             stars    :stargazers_count
-             owner    :owner} repo
+        full-name (second parts)]
+    (if-let [repo (gh/repo full-name)]
+      (let [{repo-url  :html_url
+             forks     :forks_count
+             watchers  :watchers_count
+             stars     :stargazers_count
+             owner     :owner
+             repo-name :name} repo
             {owner-url  :html_url
              owner-name :login} owner]
-        (str "[*" name "*](" repo-url ") by _" owner-name "_ — "
-             (or forks 0) " forks and "
-             (or stars 0) " stars"))
-      (str "Repo " repo-name " not found"))))
+        (str "[" repo-name "](" repo-url ") by _" owner-name "_ — "
+             (or stars 0) " stars and "
+             (or forks 0) " forks"))
+      (str "Repo " full-name " not found"))))
 
 (defn repo-inline [{repo-url :html_url
                     forks    :forks_count
@@ -49,8 +50,7 @@
 
 (defn repo [{{id :id} :chat text :text}]
   (t/send-text (cfg/get :telegram-token)
-               id {:parse_mode               "Markdown"
-                   :disable_web_page_preview true}
+               id {:parse_mode "Markdown"}
                (repo-info text)))
 
 
@@ -58,7 +58,7 @@
   (let [token (cfg/get :telegram-token)
         parts (str/split (or query "") #"/")]
     (if (> (count parts) 1)
-      
+
       ; user entered — owner/name
       (let [[user-name repo-prefix] parts
             repos (gh/user-repos user-name repo-prefix)
